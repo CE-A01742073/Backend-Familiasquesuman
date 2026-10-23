@@ -1,0 +1,27 @@
+groups:
+  - name: seguridad
+    rules:
+      - alert: PosibleFuerzaBruta
+        expr: sum(rate(familias_logins_fallidos_total[5m])) * 60 > 20
+        for: 1m
+        labels: { severidad: alta }
+        annotations:
+          resumen: "Más de 20 logins fallidos por minuto en los últimos 5 min"
+      - alert: MuchosAccesosDenegados
+        expr: sum(rate(http_requests_total{status=~"401|403"}[5m])) * 60 > 30
+        for: 2m
+        labels: { severidad: media }
+        annotations:
+          resumen: "Pico de respuestas 401/403: posible escaneo o tokens inválidos"
+      - alert: ApiCaida
+        expr: up{job="familias-api"} == 0
+        for: 1m
+        labels: { severidad: critica }
+        annotations:
+          resumen: "Prometheus no puede leer /metrics de la API"
+      - alert: ErroresServidor
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) > 0.1
+        for: 2m
+        labels: { severidad: alta }
+        annotations:
+          resumen: "La API está regresando errores 5xx"
